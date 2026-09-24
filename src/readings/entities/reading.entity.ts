@@ -31,8 +31,8 @@ export class Reading {
   @Column({ type: 'varchar', length: 50 })
   status: string;
 
-  // Relación N:1 con Meter
+  // Relación N:1 con Meter (FK a meter_id varchar)
   @ManyToOne(() => Meter, (meter) => meter.readings, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'meter_id' }) // Especifica el nombre de la FK en la BD
+  @JoinColumn({ name: 'meter_id', referencedColumnName: 'meter_id' })
   meter: Meter;
 }

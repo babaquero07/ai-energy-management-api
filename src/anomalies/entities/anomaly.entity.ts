@@ -34,8 +34,8 @@ export class Anomaly {
   @Column({ type: 'varchar', length: 50 })
   status: string;
 
-  // Relación N:1 con Meter
+  // Relación N:1 con Meter (FK a meter_id varchar)
   @ManyToOne(() => Meter, (meter) => meter.anomalies, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'meter_id' })
+  @JoinColumn({ name: 'meter_id', referencedColumnName: 'meter_id' })
   meter: Meter;
 }
