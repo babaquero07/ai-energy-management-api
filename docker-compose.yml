@@ -1,0 +1,15 @@
+services:
+  ai-energy-management-db:
+    image: postgres:17-alpine
+    container_name: ai-energy-management-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - ai-energy-management_data:/var/lib/postgresql/data
+
+volumes:
+  ai-energy-management_data:
