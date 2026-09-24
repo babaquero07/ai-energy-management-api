@@ -1,27 +1,13 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-} from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { MetersService } from './meters.service';
-import { CreateMeterDto } from './dto/create-meter.dto';
-import { UpdateMeterDto } from './dto/update-meter.dto';
+import { MetersResponseDto } from './dto/meters-response.dto';
 
 @Controller('meters')
 export class MetersController {
   constructor(private readonly metersService: MetersService) {}
 
-  @Post()
-  create(@Body() createMeterDto: CreateMeterDto) {
-    return this.metersService.create(createMeterDto);
-  }
-
   @Get()
-  findAll() {
+  findAll(): Promise<MetersResponseDto> {
     return this.metersService.findAll();
   }
 
@@ -30,13 +16,8 @@ export class MetersController {
     return this.metersService.findOne(+id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateMeterDto: UpdateMeterDto) {
-    return this.metersService.update(+id, updateMeterDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.metersService.remove(+id);
+  @Get(':id/readings')
+  getMeterREadings(@Param('id') id: string) {
+    return this.metersService.findOne(+id);
   }
 }

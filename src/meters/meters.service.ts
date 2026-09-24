@@ -1,26 +1,26 @@
 import { Injectable } from '@nestjs/common';
-import { CreateMeterDto } from './dto/create-meter.dto';
-import { UpdateMeterDto } from './dto/update-meter.dto';
+import { MetersResponseDto } from './dto/meters-response.dto';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Meter } from './entities/meter.entity';
 
 @Injectable()
 export class MetersService {
-  create(createMeterDto: CreateMeterDto) {
-    return 'This action adds a new meter';
-  }
+  constructor(
+    @InjectRepository(Meter)
+    private meterRepository: Repository<Meter>,
+  ) {}
 
-  findAll() {
-    return `This action returns all meters`;
+  async findAll(): Promise<MetersResponseDto> {
+    const meters = await this.meterRepository.find();
+
+    return {
+      data: meters,
+      total: meters.length,
+    };
   }
 
   findOne(id: number) {
     return `This action returns a #${id} meter`;
-  }
-
-  update(id: number, updateMeterDto: UpdateMeterDto) {
-    return `This action updates a #${id} meter`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} meter`;
   }
 }
