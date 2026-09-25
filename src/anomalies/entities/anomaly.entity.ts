@@ -7,6 +7,11 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Meter } from '../../meters/entities/meter.entity';
+import {
+  AnomalySeverity,
+  AnomalyStatus,
+  AnomalyType,
+} from '../enums/anomaly.enum';
 
 @Entity('anomalies')
 export class Anomaly {
@@ -16,10 +21,10 @@ export class Anomaly {
   @Column({ type: 'timestamp' })
   detected_at: Date;
 
-  @Column({ type: 'varchar', length: 100 })
+  @Column({ type: 'enum', enum: AnomalyType })
   type: string;
 
-  @Column({ type: 'varchar', length: 50 })
+  @Column({ type: 'enum', enum: AnomalySeverity })
   severity: string;
 
   @Column({ type: 'float' })
@@ -31,8 +36,11 @@ export class Anomaly {
   @Column({ type: 'text' })
   recommended_action: string;
 
-  @Column({ type: 'varchar', length: 50 })
+  @Column({ type: 'enum', enum: AnomalyStatus })
   status: string;
+
+  @Column({ type: 'json', nullable: true })
+  analysis_data: Record<string, any>;
 
   // Relación N:1 con Meter (FK a meter_id varchar)
   @ManyToOne(() => Meter, (meter) => meter.anomalies, { onDelete: 'CASCADE' })

@@ -1,26 +1,36 @@
 import { Injectable } from '@nestjs/common';
-import { CreateAnomalyDto } from './dto/create-anomaly.dto';
-import { UpdateAnomalyDto } from './dto/update-anomaly.dto';
+import { Anomaly } from './entities/anomaly.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { AnomaliesResponseDto } from './dto/anomalies-response.dto';
 
 @Injectable()
 export class AnomaliesService {
-  create(createAnomalyDto: CreateAnomalyDto) {
-    return 'This action adds a new anomaly';
+  constructor(
+    @InjectRepository(Anomaly)
+    private anomalyRepository: Repository<Anomaly>,
+  ) {}
+
+  async create(anomalyData: Partial<Anomaly>) {
+    const anomaly = this.anomalyRepository.create(anomalyData);
+
+    return await this.anomalyRepository.save(anomaly);
   }
 
-  findAll() {
-    return `This action returns all anomalies`;
+  async update(data: Partial<Anomaly>) {
+    return this.anomalyRepository.save(data);
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} anomaly`;
-  }
+  async findAll(): Promise<AnomaliesResponseDto> {
+    const anomalies = await this.anomalyRepository.find({
+      relations: {
+        meter: true,
+      },
+      order: {
+        detected_at: 'DESC',
+      },
+    });
 
-  update(id: number, updateAnomalyDto: UpdateAnomalyDto) {
-    return `This action updates a #${id} anomaly`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} anomaly`;
+    return new AnomaliesResponseDto(anomalies);
   }
 }
