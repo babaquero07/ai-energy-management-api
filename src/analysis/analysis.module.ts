@@ -7,6 +7,9 @@ import { BaselineService } from './baseline.service';
 import { AnomalyDetectorService } from './anomaly-detector.service';
 import { MetersModule } from 'src/meters/meters.module';
 import { AnomaliesModule } from 'src/anomalies/anomalies.module';
+import { AIProvider } from './ai/ai.provider';
+import { GeminiProvider } from './ai/gemini.provider';
+import { AiService } from './ai/ai.service';
 
 @Module({
   imports: [
@@ -15,7 +18,16 @@ import { AnomaliesModule } from 'src/anomalies/anomalies.module';
     AnomaliesModule,
   ],
   controllers: [AnalysisController],
-  providers: [AnalysisService, BaselineService, AnomalyDetectorService],
+  providers: [
+    AnalysisService,
+    BaselineService,
+    AnomalyDetectorService,
+    AiService,
+    {
+      provide: AIProvider,
+      useClass: GeminiProvider,
+    },
+  ],
   exports: [BaselineService],
 })
 export class AnalysisModule {}

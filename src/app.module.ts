@@ -14,18 +14,26 @@ import { Meter } from './meters/entities/meter.entity';
 import { Reading } from './readings/entities/reading.entity';
 import { Event } from './events/entities/event.entity';
 import { Anomaly } from './anomalies/entities/anomaly.entity';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'abaquero',
-      password: 'jukiloju',
-      database: 'ai-energy-management-db',
-      entities: [Meter, Reading, Event, Anomaly],
-      synchronize: true, // TODO: Change on production
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres',
+        port: 5432,
+        host: configService.get('DB_HOST'),
+        username: configService.get('POSTGRES_USER'),
+        password: configService.get('POSTGRES_PASSWORD'),
+        database: configService.get('POSTGRES_DB'),
+        entities: [Meter, Reading, Event, Anomaly],
+        synchronize: true, // TODO: Change on production
+      }),
+      inject: [ConfigService],
     }),
     MetersModule,
     AnomaliesModule,

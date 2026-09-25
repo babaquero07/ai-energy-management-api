@@ -1,7 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { AnomalyDetectorService } from './anomaly-detector.service';
 import { MetersService } from 'src/meters/meters.service';
-import { BaselineService } from './baseline.service';
 import { AnomaliesService } from 'src/anomalies/anomalies.service';
 import { AnomalyStatus } from 'src/anomalies/enums/anomaly.enum';
 import { AnomalyResponseDto } from 'src/anomalies/dto/anomaly-response.dto';
@@ -12,9 +11,7 @@ export class AnalysisService {
     private readonly anomalyDetectorService: AnomalyDetectorService,
     @Inject(forwardRef(() => MetersService))
     private readonly meterService: MetersService,
-    private readonly baselineService: BaselineService,
     private readonly anomaliesService: AnomaliesService,
-    // private readonly aiService: AIService,
   ) {}
 
   async analyzeMeter(meter_id: string) {
