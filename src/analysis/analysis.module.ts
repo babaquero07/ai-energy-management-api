@@ -11,4 +11,4 @@ import { BaselineService } from './baseline.service';
   providers: [AnalysisService, BaselineService],
   exports: [BaselineService],
 })
-export class AnalysisModule { }
+export class AnalysisModule {}
