@@ -74,28 +74,20 @@ export class GeminiProvider extends AIProvider {
   async analyzeAnomaly(input: AnomalyAnalysisInput): Promise<AIAnalysisResult> {
     const prompt = this.buildPrompt(input);
 
-    try {
-      const response = await this.ai.models.generateContent({
-        model: this.model,
-        contents: prompt,
-        config: {
-          responseMimeType: 'application/json',
-          responseSchema: this.responseSchema,
-        },
-      });
+    const response = await this.ai.models.generateContent({
+      model: this.model,
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: this.responseSchema,
+      },
+    });
 
-      if (!response.text) {
-        throw new Error('Gemini returned an empty response');
-      }
-
-      return JSON.parse(response.text) as AIAnalysisResult;
-    } catch (error) {
-      console.error('Failed to generate AI anomaly analysis', error);
-
-      throw new InternalServerErrorException(
-        'Failed to generate AI anomaly analysis',
-      );
+    if (!response.text) {
+      throw new Error('Gemini returned an empty response');
     }
+
+    return JSON.parse(response.text) as AIAnalysisResult;
   }
 
   // async analyzeAnomaly(input: AnomalyAnalysisInput): Promise<AIAnalysisResult> {

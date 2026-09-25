@@ -4,6 +4,7 @@ import { MetersService } from 'src/meters/meters.service';
 import { AnomaliesService } from 'src/anomalies/anomalies.service';
 import { AnomalyStatus } from 'src/anomalies/enums/anomaly.enum';
 import { AnomalyResponseDto } from 'src/anomalies/dto/anomaly-response.dto';
+import { AiService } from './ai/ai.service';
 
 @Injectable()
 export class AnalysisService {
@@ -12,7 +13,8 @@ export class AnalysisService {
     @Inject(forwardRef(() => MetersService))
     private readonly meterService: MetersService,
     private readonly anomaliesService: AnomaliesService,
-  ) {}
+    private readonly aiService: AiService,
+  ) { }
 
   async analyzeMeter(meter_id: string) {
     const meter = await this.meterService.findOne(meter_id);
@@ -49,6 +51,25 @@ export class AnalysisService {
       reason: 'Anomaly detected. Pending AI analysis.',
       recommended_action: 'Pending AI analysis.',
     });
+
+    try {
+      const ai_result = await this.aiService.analyzeAnomaly({
+        anomaly_id: savedAnomaly.id,
+        meter_id: meter.meter_id,
+        type: detection.type!,
+        severity: detection.severity!,
+        confidence: detection.confidence,
+        analysis_data,
+      });
+
+      savedAnomaly.reason = ai_result.reason;
+      savedAnomaly.recommended_action = ai_result.recommended_action;
+      savedAnomaly.status = AnomalyStatus.COMPLETED;
+
+      await this.anomaliesService.update(savedAnomaly);
+    } catch (error) {
+      console.error(error);
+    }
 
     return {
       detected: true,
