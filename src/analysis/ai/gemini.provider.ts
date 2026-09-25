@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { GoogleGenAI } from '@google/genai';
 import { AIProvider } from './ai.provider';
 import { AnomalyAnalysisInput } from '../dto/anomaly-analysis-input.dto';
@@ -89,27 +89,4 @@ export class GeminiProvider extends AIProvider {
 
     return JSON.parse(response.text) as AIAnalysisResult;
   }
-
-  // async analyzeAnomaly(input: AnomalyAnalysisInput): Promise<AIAnalysisResult> {
-  //   const response = await this.ai.models.generateContent({
-  //     model: 'gemini-2.5-flash',
-  //     contents: JSON.stringify(input),
-  //     config: {
-  //       systemInstruction:
-  //         'Analiza la anomalía utilizando exclusivamente la información proporcionada. Explica las causas posibles basándote en la evidencia disponible. No inventes eventos operativos ni datos que no estén presentes. Devuelve la respuesta en JSON estructurado.',
-  //       responseMimeType: 'application/json',
-  //       responseJsonSchema: {
-  //         type: Type.OBJECT,
-  //         properties: {
-  //           reason: { type: Type.STRING },
-  //           evidence: { type: Type.ARRAY, items: { type: Type.STRING } },
-  //           recommended_action: { type: Type.STRING },
-  //         },
-  //         required: ['reason', 'evidence', 'recommended_action'],
-  //       },
-  //     },
-  //   });
-
-  //   return new AIAnalysisResult(JSON.parse(response.text ?? '{}'));
-  // }
 }

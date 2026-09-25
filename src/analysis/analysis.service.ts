@@ -5,6 +5,7 @@ import { AnomaliesService } from 'src/anomalies/anomalies.service';
 import { AnomalyStatus } from 'src/anomalies/enums/anomaly.enum';
 import { AnomalyResponseDto } from 'src/anomalies/dto/anomaly-response.dto';
 import { AiService } from './ai/ai.service';
+import { AnomalyDetailResponseDto } from 'src/anomalies/dto/anomaly-detail-response.dto';
 
 @Injectable()
 export class AnalysisService {
@@ -14,7 +15,7 @@ export class AnalysisService {
     private readonly meterService: MetersService,
     private readonly anomaliesService: AnomaliesService,
     private readonly aiService: AiService,
-  ) { }
+  ) {}
 
   async analyzeMeter(meter_id: string) {
     const meter = await this.meterService.findOne(meter_id);
@@ -75,5 +76,9 @@ export class AnalysisService {
       detected: true,
       anomaly: new AnomalyResponseDto(savedAnomaly),
     };
+  }
+
+  async getAnalysis(id: number): Promise<AnomalyDetailResponseDto> {
+    return await this.anomaliesService.findOne(id);
   }
 }
