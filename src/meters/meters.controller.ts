@@ -2,6 +2,7 @@ import { Controller, Get, Param } from '@nestjs/common';
 import { MetersService } from './meters.service';
 import { MetersResponseDto } from './dto/meters-response.dto';
 import { MeterDetailResponseDto } from './dto/meter-detail-response.dto';
+import { ReadingsResponseDto } from './dto/readings-reponse.dto';
 
 @Controller('meters')
 export class MetersController {
@@ -24,7 +25,9 @@ export class MetersController {
   }
 
   @Get(':id/readings')
-  getMeterREadings(@Param('id') id: string) {
-    return this.metersService.getMeterById(id);
+  async getMeterREadings(
+    @Param('id') id: string,
+  ): Promise<ReadingsResponseDto> {
+    return this.metersService.getMeterReadings(id);
   }
 }

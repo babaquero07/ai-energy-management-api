@@ -1,5 +1,5 @@
 export class ReadingResponseDto {
-  timestamp: string;
+  timestamp: Date;
   consumption: number;
   voltage: number;
   current: number;

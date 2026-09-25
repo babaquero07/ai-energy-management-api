@@ -5,6 +5,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Meter } from './entities/meter.entity';
 import { MeterDetailResponseDto } from './dto/meter-detail-response.dto';
 import { BaselineService } from 'src/analysis/baseline.service';
+import { ReadingResponseDto } from './dto/reading-response.dto';
+import { ReadingsResponseDto } from './dto/readings-reponse.dto';
 
 @Injectable()
 export class MetersService {
@@ -70,12 +72,39 @@ export class MetersService {
       },
 
       history: meter.readings.map((reading) => ({
-        timestamp: reading.timestamp.toISOString(),
+        timestamp: reading.timestamp,
         consumption: reading.consumption_kwh,
         voltage: reading.voltage_v,
         current: reading.current_a,
         powerFactor: reading.power_factor,
       })),
+    };
+  }
+
+  async getMeterReadings(meter_id: string): Promise<ReadingsResponseDto> {
+    const meter = await this.meterRepository.findOne({
+      where: { meter_id },
+      relations: {
+        readings: true,
+      },
+      order: {
+        readings: {
+          timestamp: 'ASC',
+        },
+      },
+    });
+
+    if (!meter) throw new NotFoundException(`Meter ${meter_id} not found`);
+
+    return {
+      data: meter.readings.map((reading) => ({
+        timestamp: reading.timestamp,
+        consumption: reading.consumption_kwh,
+        voltage: reading.voltage_v,
+        current: reading.current_a,
+        powerFactor: reading.power_factor,
+      })),
+      total: meter.readings.length,
     };
   }
 }
