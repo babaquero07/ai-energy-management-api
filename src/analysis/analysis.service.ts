@@ -15,7 +15,7 @@ export class AnalysisService {
     private readonly baselineService: BaselineService,
     private readonly anomaliesService: AnomaliesService,
     // private readonly aiService: AIService,
-  ) { }
+  ) {}
 
   async analyzeMeter(meter_id: string) {
     const meter = await this.meterService.findOne(meter_id);

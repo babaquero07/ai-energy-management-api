@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Anomaly } from './entities/anomaly.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AnomaliesResponseDto } from './dto/anomalies-response.dto';
+import { AnomalyDetailResponseDto } from './dto/anomaly-detail-response.dto';
 
 @Injectable()
 export class AnomaliesService {
@@ -32,5 +33,18 @@ export class AnomaliesService {
     });
 
     return new AnomaliesResponseDto(anomalies);
+  }
+
+  async findOne(id: number): Promise<AnomalyDetailResponseDto> {
+    const anomaly = await this.anomalyRepository.findOne({
+      where: { id },
+      relations: {
+        meter: true,
+      },
+    });
+
+    if (!anomaly) throw new NotFoundException(`Anomaly ${id} not found`);
+
+    return new AnomalyDetailResponseDto(anomaly);
   }
 }

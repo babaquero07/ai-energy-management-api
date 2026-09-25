@@ -4,7 +4,6 @@ import { AnomalyResponseDto } from './anomaly-response.dto';
 export class AnomalyDetailResponseDto extends AnomalyResponseDto {
   reason: string;
   recommended_action: string;
-
   analysis_data: Record<string, any>;
 
   constructor(anomaly: Anomaly) {
