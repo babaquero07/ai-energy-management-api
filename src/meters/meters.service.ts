@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { MetersResponseDto } from './dto/meters-response.dto';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -13,6 +18,7 @@ export class MetersService {
     @InjectRepository(Meter)
     private meterRepository: Repository<Meter>,
 
+    @Inject(forwardRef(() => BaselineService))
     private readonly baselineService: BaselineService,
   ) {}
 
@@ -23,6 +29,19 @@ export class MetersService {
       data: meters,
       total: meters.length,
     };
+  }
+
+  async findOne(meter_id: string): Promise<Meter> {
+    const meter = await this.meterRepository.findOne({
+      where: { meter_id },
+      relations: {
+        readings: true,
+      },
+    });
+
+    if (!meter) throw new NotFoundException(`Meter ${meter_id} not found`);
+
+    return meter;
   }
 
   async getMeterById(id: string): Promise<MeterDetailResponseDto> {
