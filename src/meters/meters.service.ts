@@ -36,6 +36,12 @@ export class MetersService {
       where: { meter_id },
       relations: {
         readings: true,
+        events: true,
+      },
+      order: {
+        readings: {
+          timestamp: 'ASC',
+        },
       },
     });
 

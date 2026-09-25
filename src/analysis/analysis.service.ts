@@ -4,6 +4,7 @@ import { MetersService } from 'src/meters/meters.service';
 import { BaselineService } from './baseline.service';
 import { AnomaliesService } from 'src/anomalies/anomalies.service';
 import { AnomalyStatus } from 'src/anomalies/enums/anomaly.enum';
+import { AnomalyResponseDto } from 'src/anomalies/dto/anomaly-response.dto';
 
 @Injectable()
 export class AnalysisService {
@@ -14,52 +15,37 @@ export class AnalysisService {
     private readonly baselineService: BaselineService,
     private readonly anomaliesService: AnomaliesService,
     // private readonly aiService: AIService,
-  ) {}
+  ) { }
 
   async analyzeMeter(meter_id: string) {
     const meter = await this.meterService.findOne(meter_id);
 
-    const readings = meter.readings;
+    const detection = this.anomalyDetectorService.detect(
+      meter.readings,
+      meter.events ?? [],
+    );
 
-    const baseline = this.baselineService.calculate(readings);
-
-    const detection = this.anomalyDetectorService.detect(readings, baseline);
-    if (!detection.detected)
+    if (!detection.detected) {
       return {
         detected: false,
         anomaly: null,
       };
-
-    const type = this.anomalyDetectorService.determineType(detection.signals);
-    const severity = this.anomalyDetectorService.determineSeverity(
-      detection.signals,
-    );
-
-    const currentReading = readings[readings.length - 1];
-    const previousReading = readings[readings.length - 2];
+    }
 
     const analysis_data = {
-      baseline,
-      current_consumption: currentReading.consumption_kwh,
-      variation_percent: this.baselineService.calculateVariation(
-        currentReading.consumption_kwh,
-        baseline,
-      ),
+      baseline: detection.baseline,
+      variation_percent: detection.variationPercent,
       signals: detection.signals,
-      electrical_changes: this.baselineService.getElectricalChanges(
-        currentReading,
-        previousReading,
-      ),
-
-      // TODO: Add this data
-      // related_events: {}
-      // data_quality_issues: {}
+      segment: detection.segment,
+      max_abs_z: detection.maxAbsZ,
+      worst_power_residual: detection.worstPowerResidual,
+      related_events: detection.relatedEvent,
     };
 
     const savedAnomaly = await this.anomaliesService.create({
       meter,
-      type,
-      severity,
+      type: detection.type!,
+      severity: detection.severity!,
       status: AnomalyStatus.DETECTED,
       confidence: detection.confidence,
       analysis_data,
@@ -69,7 +55,7 @@ export class AnalysisService {
 
     return {
       detected: true,
-      anomaly: savedAnomaly,
+      anomaly: new AnomalyResponseDto(savedAnomaly),
     };
   }
 }

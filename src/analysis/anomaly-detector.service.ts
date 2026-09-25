@@ -1,7 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { Reading } from 'src/readings/entities/reading.entity';
-import { BaselineService } from './baseline.service';
+import {
+  BaselineService,
+  SeriesAnalysis,
+  SeriesSignals,
+} from './baseline.service';
 import { AnomalySeverity, AnomalyType } from 'src/anomalies/enums/anomaly.enum';
+import { Event } from 'src/events/entities/event.entity';
 
 export interface AnomalyDetectionResult {
   detected: boolean;
@@ -17,91 +22,52 @@ export interface AnomalyDetectionResult {
 export class AnomalyDetectorService {
   constructor(private readonly baselineService: BaselineService) {}
 
-  detect(readings: Reading[], baseline: number): AnomalyDetectionResult {
-    if (readings.length < 2)
-      return {
-        detected: false,
-        signals: {
-          baselineDeviation: false,
-          consumptionSpike: false,
-          electricalChange: false,
-        },
-        confidence: 100,
-      };
-
-    const current = readings[readings.length - 1];
-    const previous = readings[readings.length - 2];
-
-    const variation = this.baselineService.calculateVariation(
-      current.consumption_kwh,
-      baseline,
-    );
-
-    const spike = this.baselineService.detectConsumptionSpike(
-      current,
-      previous,
-    );
-
-    const electricalChange = this.baselineService.detectElectricalChange(
-      current,
-      previous,
-    );
-
-    const signals = {
-      baselineDeviation: variation >= 50,
-      consumptionSpike: spike,
-      electricalChange,
-    };
-
-    const hasAnomaly =
-      signals.baselineDeviation ||
-      signals.consumptionSpike ||
-      signals.electricalChange;
-
-    if (!hasAnomaly) {
-      return {
-        detected: false,
-        signals: {
-          baselineDeviation: false,
-          consumptionSpike: false,
-          electricalChange: false,
-        },
-        confidence: 100,
-      };
+  detect(readings: Reading[], events: Event[] = []) {
+    const analysis = this.baselineService.analyzeSeries(readings);
+    if (!analysis.detected) {
+      return { ...analysis, type: null, severity: null, relatedEvent: null };
     }
 
-    return {
-      detected: true,
-      signals,
-      confidence: 0.96,
-    };
+    const relatedEvent = this.explainingEvent(events, analysis.segment);
+    const type = this.determineType(analysis.signals, relatedEvent);
+    const severity = this.determineSeverity(type, analysis);
+
+    return { ...analysis, type, severity, relatedEvent };
   }
 
-  determineType(signals: AnomalyDetectionResult['signals']): AnomalyType {
-    if (
-      signals.baselineDeviation &&
-      signals.consumptionSpike &&
-      signals.electricalChange
-    ) {
-      return AnomalyType.REAL_ANOMALY;
-    }
+  private explainingEvent(events: Event[], segment: SeriesAnalysis['segment']) {
+    if (!segment) return null;
+    const explaining = new Set(['OPERATIONAL_CHANGE', 'SCHEDULED_OUTAGE']);
+    const from = segment.from.getTime() - 2 * 60 * 60 * 1000;
+    const to = segment.to.getTime() + 2 * 60 * 60 * 1000;
+    return (
+      events.find((event) => {
+        const time = new Date(event.timestamp).getTime();
+        return explaining.has(event.type) && time >= from && time <= to;
+      }) ?? null
+    );
+  }
 
-    return AnomalyType.EXPLAINABLE_ANOMALY;
+  determineType(
+    signals: SeriesSignals,
+    relatedEvent: Event | null,
+  ): AnomalyType {
+    if (signals.dataQuality && !signals.outliers)
+      return AnomalyType.DATA_QUALITY;
+    if (relatedEvent) return AnomalyType.FALSE_POSITIVE;
+
+    return AnomalyType.REAL_ANOMALY;
   }
 
   determineSeverity(
-    signals: AnomalyDetectionResult['signals'],
+    type: AnomalyType,
+    analysis: SeriesAnalysis,
   ): AnomalySeverity {
-    const signalCount = Object.values(signals).filter(Boolean).length;
+    if (type === AnomalyType.DATA_QUALITY && !analysis.signals.outliers)
+      return AnomalySeverity.LOW;
 
-    if (signalCount >= 3) {
-      return AnomalySeverity.HIGH;
-    }
+    if (type === AnomalyType.FALSE_POSITIVE) return AnomalySeverity.MEDIUM;
 
-    if (signalCount === 2) {
-      return AnomalySeverity.MEDIUM;
-    }
-
-    return AnomalySeverity.LOW;
+    return AnomalySeverity.HIGH;
   }
 }

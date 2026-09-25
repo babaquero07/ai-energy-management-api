@@ -18,7 +18,7 @@ export class Anomaly {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   detected_at: Date;
 
   @Column({ type: 'enum', enum: AnomalyType })
