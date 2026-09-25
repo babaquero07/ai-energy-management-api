@@ -1,26 +1,30 @@
 import { Injectable } from '@nestjs/common';
-import { CreateDashboardDto } from './dto/create-dashboard.dto';
-import { UpdateDashboardDto } from './dto/update-dashboard.dto';
+import { MetersService } from 'src/meters/meters.service';
+import { ReadingsService } from 'src/readings/readings.service';
+import { DashboardSummaryDto } from './dto/dashboard-summary.dto';
 
 @Injectable()
 export class DashboardService {
-  create(createDashboardDto: CreateDashboardDto) {
-    return 'This action adds a new dashboard';
-  }
+  constructor(
+    private readonly meterService: MetersService,
+    private readonly ReadingService: ReadingsService,
+  ) {}
 
-  findAll() {
-    return `This action returns all dashboard`;
-  }
+  async getSummary(): Promise<DashboardSummaryDto> {
+    const totalMeters = await this.meterService.countMeters();
 
-  findOne(id: number) {
-    return `This action returns a #${id} dashboard`;
-  }
+    const consumption = await this.ReadingService.getTotalConsumption();
 
-  update(id: number, updateDashboardDto: UpdateDashboardDto) {
-    return `This action updates a #${id} dashboard`;
-  }
+    return {
+      meters: totalMeters,
+      totalConsumption: +consumption.toFixed(2),
 
-  remove(id: number) {
-    return `This action removes a #${id} dashboard`;
+      // TODO: Replace when services are ready
+      anomalies: 0,
+      highPriorityAnomalies: 0,
+      aiConfidence: null,
+      lastAnalysisAt: null,
+      lastAnalysisStatus: null,
+    };
   }
 }

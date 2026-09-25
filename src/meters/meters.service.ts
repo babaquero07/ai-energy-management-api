@@ -5,7 +5,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Meter } from './entities/meter.entity';
 import { MeterDetailResponseDto } from './dto/meter-detail-response.dto';
 import { BaselineService } from 'src/analysis/baseline.service';
-import { ReadingResponseDto } from './dto/reading-response.dto';
 import { ReadingsResponseDto } from './dto/readings-reponse.dto';
 
 @Injectable()
@@ -106,5 +105,9 @@ export class MetersService {
       })),
       total: meter.readings.length,
     };
+  }
+
+  async countMeters(): Promise<number> {
+    return await this.meterRepository.count();
   }
 }

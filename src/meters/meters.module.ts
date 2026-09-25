@@ -9,5 +9,6 @@ import { AnalysisModule } from 'src/analysis/analysis.module';
   imports: [TypeOrmModule.forFeature([Meter]), AnalysisModule],
   controllers: [MetersController],
   providers: [MetersService],
+  exports: [MetersService],
 })
 export class MetersModule {}
