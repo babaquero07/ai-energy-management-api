@@ -20,6 +20,12 @@ async function bootstrap() {
     }),
   );
 
+  app.enableCors({
+    origin: 'http://localhost:3001',
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    credentials: true,
+  });
+
   await app.listen(PORT, '127.0.0.1');
 
   Logger.log(`API escuchando en http://localhost:${PORT}/api`, 'Bootstrap');

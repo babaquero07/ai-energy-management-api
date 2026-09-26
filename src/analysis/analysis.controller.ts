@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
 } from '@nestjs/common';
 import { AnalysisService } from './analysis.service';
@@ -32,5 +33,17 @@ export class AnalysisController {
     @Param('id', ParseIntPipe) id: number,
   ): Promise<AnomalyDetailResponseDto> {
     return this.analysisService.getAnalysis(id);
+  }
+
+  @Patch('analysis/:id')
+  async updateAnalysis(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<{ success: boolean; message: string }> {
+    await this.analysisService.updateAnalysis(id);
+
+    return {
+      success: true,
+      message: 'Anomaly analysis updated successfully',
+    };
   }
 }

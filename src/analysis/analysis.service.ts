@@ -3,6 +3,7 @@ import {
   Inject,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { AnomalyDetectorService } from './anomaly-detector.service';
 import { MetersService } from 'src/meters/meters.service';
@@ -102,6 +103,36 @@ export class AnalysisService {
       console.error(error);
       throw new InternalServerErrorException(
         'Failed to execute meters analysis',
+      );
+    }
+  }
+
+  async updateAnalysis(id: number) {
+    const anomaly = await this.anomaliesService.findOne(id);
+    if (!anomaly) {
+      throw new NotFoundException('Anomaly not found');
+    }
+
+    try {
+      const ai_result = await this.aiService.analyzeAnomaly({
+        anomaly_id: anomaly.id,
+        meter_id: anomaly.meter_id,
+        type: anomaly.type,
+        severity: anomaly.severity,
+        confidence: anomaly.confidence,
+        analysis_data: anomaly.analysis_data,
+      });
+
+      anomaly.reason = ai_result.reason;
+      anomaly.recommended_action = ai_result.recommended_action;
+      anomaly.status = AnomalyStatus.COMPLETED;
+
+      await this.anomaliesService.update(anomaly);
+    } catch (error) {
+      console.error(error);
+
+      throw new InternalServerErrorException(
+        'Failed to update anomaly analysis with IA',
       );
     }
   }
