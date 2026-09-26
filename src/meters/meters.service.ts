@@ -205,6 +205,15 @@ export class MetersService {
     };
   }
 
+  async findAllWithRelations(): Promise<Meter[]> {
+    return await this.meterRepository.find({
+      relations: {
+        readings: true,
+        events: true,
+      },
+    });
+  }
+
   async countMeters(): Promise<number> {
     return await this.meterRepository.count();
   }

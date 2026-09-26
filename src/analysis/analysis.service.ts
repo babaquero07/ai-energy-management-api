@@ -1,4 +1,9 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { AnomalyDetectorService } from './anomaly-detector.service';
 import { MetersService } from 'src/meters/meters.service';
 import { AnomaliesService } from 'src/anomalies/anomalies.service';
@@ -80,5 +85,24 @@ export class AnalysisService {
 
   async getAnalysis(id: number): Promise<AnomalyDetailResponseDto> {
     return await this.anomaliesService.findOne(id);
+  }
+
+  async executeAnalysis(): Promise<{ success: boolean }> {
+    try {
+      const meters = await this.meterService.findAllWithRelations();
+
+      for (const meter of meters) {
+        await this.analyzeMeter(meter.meter_id);
+      }
+
+      return {
+        success: true,
+      };
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException(
+        'Failed to execute meters analysis',
+      );
+    }
   }
 }

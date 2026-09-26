@@ -22,6 +22,11 @@ export class AnalysisController {
     return this.analysisService.analyzeMeter(analyzeMeterDto.meter_id);
   }
 
+  @Post('analyze/execute')
+  async executeAnalysis(): Promise<{ success: boolean }> {
+    return this.analysisService.executeAnalysis();
+  }
+
   @Get('analysis/:id')
   async getAnalysis(
     @Param('id', ParseIntPipe) id: number,

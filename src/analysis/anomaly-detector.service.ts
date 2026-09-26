@@ -37,12 +37,15 @@ export class AnomalyDetectorService {
 
   private explainingEvent(events: Event[], segment: SeriesAnalysis['segment']) {
     if (!segment) return null;
+
     const explaining = new Set(['OPERATIONAL_CHANGE', 'SCHEDULED_OUTAGE']);
     const from = segment.from.getTime() - 2 * 60 * 60 * 1000;
     const to = segment.to.getTime() + 2 * 60 * 60 * 1000;
+
     return (
       events.find((event) => {
         const time = new Date(event.timestamp).getTime();
+
         return explaining.has(event.type) && time >= from && time <= to;
       }) ?? null
     );
