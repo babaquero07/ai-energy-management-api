@@ -5,12 +5,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { MetersResponseDto } from './dto/meters-response.dto';
-import { Repository } from 'typeorm';
+import { Between, FindOptionsWhere, Repository } from 'typeorm';
+import { FindMetersQueryDto } from './dto/find-meters-query.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Meter } from './entities/meter.entity';
 import { MeterDetailResponseDto } from './dto/meter-detail-response.dto';
 import { BaselineService } from 'src/analysis/baseline.service';
-import { ReadingsResponseDto } from './dto/readings-reponse.dto';
+import { ReadingsResponseDto } from 'src/readings/dto/readings-reponse.dto';
 
 @Injectable()
 export class MetersService {
@@ -20,10 +21,27 @@ export class MetersService {
 
     @Inject(forwardRef(() => BaselineService))
     private readonly baselineService: BaselineService,
-  ) {}
+  ) { }
 
-  async findAll(): Promise<MetersResponseDto> {
-    const meters = await this.meterRepository.find();
+  async findAll(query: FindMetersQueryDto = {}): Promise<MetersResponseDto> {
+    const where: FindOptionsWhere<Meter> = {};
+
+    if (query.meter_id) {
+      where.meter_id = query.meter_id;
+    }
+
+    if (query.status) {
+      where.status = query.status;
+    }
+
+    if (query.date) {
+      where.created_at = Between(
+        new Date(`${query.date}T00:00:00.000Z`),
+        new Date(`${query.date}T23:59:59.999Z`),
+      );
+    }
+
+    const meters = await this.meterRepository.find({ where });
 
     return {
       data: meters,

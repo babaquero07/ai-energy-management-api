@@ -2,29 +2,38 @@ import { Injectable } from '@nestjs/common';
 import { MetersService } from 'src/meters/meters.service';
 import { ReadingsService } from 'src/readings/readings.service';
 import { DashboardSummaryDto } from './dto/dashboard-summary.dto';
+import { AnomaliesService } from 'src/anomalies/anomalies.service';
+import { AnomalySeverity } from 'src/anomalies/enums/anomaly.enum';
 
 @Injectable()
 export class DashboardService {
   constructor(
     private readonly meterService: MetersService,
     private readonly ReadingService: ReadingsService,
+    private readonly anomaliesService: AnomaliesService,
   ) {}
 
   async getSummary(): Promise<DashboardSummaryDto> {
-    const totalMeters = await this.meterService.countMeters();
+    const [totalMeters, consumption, anomalies] = await Promise.all([
+      this.meterService.countMeters(),
+      this.ReadingService.getTotalConsumption(),
+      this.anomaliesService.findAll(),
+    ]);
 
-    const consumption = await this.ReadingService.getTotalConsumption();
+    const latest = anomalies.data[0];
 
     return {
       meters: totalMeters,
       totalConsumption: +consumption.toFixed(2),
-
-      // TODO: Replace when services are ready
-      anomalies: 0,
-      highPriorityAnomalies: 0,
-      aiConfidence: null,
-      lastAnalysisAt: null,
-      lastAnalysisStatus: null,
+      anomalies: anomalies.total,
+      highPriorityAnomalies: anomalies.data.filter(
+        (anomaly) => anomaly.severity === AnomalySeverity.HIGH,
+      ).length,
+      aiConfidence: latest?.confidence ?? null,
+      lastAnalysisAt: latest
+        ? new Date(latest.detected_at).toISOString()
+        : null,
+      lastAnalysisStatus: latest?.status ?? null,
     };
   }
 }

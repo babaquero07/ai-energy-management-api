@@ -1,16 +1,17 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { MetersService } from './meters.service';
 import { MetersResponseDto } from './dto/meters-response.dto';
 import { MeterDetailResponseDto } from './dto/meter-detail-response.dto';
-import { ReadingsResponseDto } from './dto/readings-reponse.dto';
+import { ReadingsResponseDto } from 'src/readings/dto/readings-reponse.dto';
+import { FindMetersQueryDto } from './dto/find-meters-query.dto';
 
 @Controller('meters')
 export class MetersController {
   constructor(private readonly metersService: MetersService) {}
 
   @Get()
-  findAll(): Promise<MetersResponseDto> {
-    return this.metersService.findAll();
+  findAll(@Query() query: FindMetersQueryDto): Promise<MetersResponseDto> {
+    return this.metersService.findAll(query);
   }
 
   @Get(':id')

@@ -1,4 +1,4 @@
-import { ReadingResponseDto } from './reading-response.dto';
+import { ReadingResponseDto } from '../../readings/dto/reading-response.dto';
 
 export class ReadingsResponseDto {
   data: ReadingResponseDto[];
