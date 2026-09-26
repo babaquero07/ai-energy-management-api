@@ -49,13 +49,13 @@ export class GeminiProvider extends AIProvider {
         },
         description: 'Specific pieces of evidence supporting the explanation.',
       },
-      recommendedAction: {
+      recommended_action: {
         type: 'string',
         description:
           'Practical recommended action based only on the available evidence.',
       },
     },
-    required: ['reason', 'evidence', 'recommendedAction'],
+    required: ['reason', 'evidence', 'recommended_action'],
   };
 
   constructor(private readonly configService: ConfigService) {
