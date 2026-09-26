@@ -12,6 +12,7 @@ import { Meter } from './entities/meter.entity';
 import { MeterDetailResponseDto } from './dto/meter-detail-response.dto';
 import { BaselineService } from 'src/analysis/baseline.service';
 import { ReadingsResponseDto } from 'src/readings/dto/readings-reponse.dto';
+import { MeterResponseDto } from './dto/meter-response.dto';
 
 @Injectable()
 export class MetersService {
@@ -21,7 +22,49 @@ export class MetersService {
 
     @Inject(forwardRef(() => BaselineService))
     private readonly baselineService: BaselineService,
-  ) { }
+  ) {}
+
+  async getMetersGeneralInfo() {
+    const result:
+      | {
+          actives: number;
+          inactives: number;
+          maintenances: number;
+          total: number;
+        }
+      | undefined = await this.meterRepository
+      .createQueryBuilder('meter')
+      .select('COUNT(*)::int', 'total')
+      .addSelect(
+        `SUM(CASE WHEN meter.status = 'Activo' THEN 1 ELSE 0 END)::int`,
+        'actives',
+      )
+      .addSelect(
+        `SUM(CASE WHEN meter.status = 'Inactivo' THEN 1 ELSE 0 END)::int`,
+        'inactives',
+      )
+      .addSelect(
+        `SUM(CASE WHEN meter.status = 'Mantenimiento' THEN 1 ELSE 0 END)::int`,
+        'maintenances',
+      )
+      .getRawOne();
+
+    if (!result) {
+      return {
+        actives: 0,
+        inactives: 0,
+        maintenances: 0,
+        total: 0,
+      };
+    }
+
+    return {
+      actives: result.actives || 0,
+      inactives: result.inactives || 0,
+      maintenances: result.maintenances || 0,
+      total: result.total || 0,
+    };
+  }
 
   async findAll(query: FindMetersQueryDto = {}): Promise<MetersResponseDto> {
     const where: FindOptionsWhere<Meter> = {};
@@ -41,12 +84,24 @@ export class MetersService {
       );
     }
 
-    const meters = await this.meterRepository.find({ where });
+    const meters = await this.meterRepository.find({
+      where,
+      order: { created_at: 'DESC' },
+    });
 
-    return {
-      data: meters,
-      total: meters.length,
-    };
+    const generalInfo = await this.getMetersGeneralInfo();
+
+    return new MetersResponseDto({
+      data: {
+        meters: meters.map(
+          (meter) => new MeterResponseDto(meter as MeterResponseDto),
+        ),
+        actives: generalInfo.actives,
+        inactives: generalInfo.inactives,
+        maintenances: generalInfo.maintenances,
+        total: generalInfo.total,
+      },
+    });
   }
 
   async findOne(meter_id: string): Promise<Meter> {
