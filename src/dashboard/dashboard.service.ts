@@ -22,10 +22,14 @@ export class DashboardService {
 
     const latest = anomalies.data[0];
 
-    const aiConfidence =
-      anomalies.data.reduce((acc, anomaly) => {
-        return acc + (anomaly.confidence ?? 0);
-      }, 0) / anomalies.data.length;
+    let aiConfidence = 0.9;
+
+    if (anomalies.data.length > 0) {
+      aiConfidence =
+        anomalies.data.reduce((acc, anomaly) => {
+          return acc + (anomaly.confidence ?? 0);
+        }, 0) / anomalies.data.length;
+    }
 
     return {
       meters: totalMeters,
