@@ -25,13 +25,18 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
-        port: 5432,
-        host: configService.get('DB_HOST'),
-        username: configService.get('POSTGRES_USER'),
-        password: configService.get('POSTGRES_PASSWORD'),
-        database: configService.get('POSTGRES_DB'),
+        url: configService.get('DATABASE_URL'),
+        // * Uncomment this if you are using a local database
+        // port: 5432,
+        // host: configService.get('DB_HOST'),
+        // username: configService.get('POSTGRES_USER'),
+        // password: configService.get('POSTGRES_PASSWORD'),
+        // database: configService.get('POSTGRES_DB'),
         entities: [Meter, Reading, Event, Anomaly],
         synchronize: true, // TODO: Change on production
+        ssl: {
+          rejectUnauthorized: false, // Render requires this to be false
+        },
       }),
       inject: [ConfigService],
     }),
@@ -46,5 +51,5 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
   providers: [AppService],
 })
 export class AppModule {
-  constructor(private datasource: DataSource) {}
+  constructor(private datasource: DataSource) { }
 }
