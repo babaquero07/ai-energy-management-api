@@ -33,7 +33,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         // password: configService.get('POSTGRES_PASSWORD'),
         // database: configService.get('POSTGRES_DB'),
         entities: [Meter, Reading, Event, Anomaly],
-        synchronize: true, // TODO: Change on production
+        synchronize: false,
         ssl: {
           rejectUnauthorized: false, // Render requires this to be false
         },
