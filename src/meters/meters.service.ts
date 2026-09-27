@@ -1,9 +1,4 @@
-import {
-  forwardRef,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { MetersResponseDto } from './dto/meters-response.dto';
 import { FindOptionsWhere, Raw, Repository } from 'typeorm';
 import { FindMetersQueryDto } from './dto/find-meters-query.dto';
@@ -19,8 +14,6 @@ export class MetersService {
   constructor(
     @InjectRepository(Meter)
     private meterRepository: Repository<Meter>,
-
-    @Inject(forwardRef(() => BaselineService))
     private readonly baselineService: BaselineService,
   ) {}
 

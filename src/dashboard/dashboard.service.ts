@@ -9,36 +9,35 @@ import { AnomalySeverity } from 'src/anomalies/enums/anomaly.enum';
 export class DashboardService {
   constructor(
     private readonly meterService: MetersService,
-    private readonly ReadingService: ReadingsService,
+    private readonly readingsService: ReadingsService,
     private readonly anomaliesService: AnomaliesService,
   ) {}
 
   async getSummary(): Promise<DashboardSummaryDto> {
     const [totalMeters, consumption, anomalies] = await Promise.all([
       this.meterService.countMeters(),
-      this.ReadingService.getTotalConsumption(),
+      this.readingsService.getTotalConsumption(),
       this.anomaliesService.findAll(),
     ]);
 
-    const latest = anomalies.data[0];
-
-    let aiConfidence = 0.9;
-
-    if (anomalies.data.length > 0) {
-      aiConfidence =
-        anomalies.data.reduce((acc, anomaly) => {
+    let confidenceRatio = 0.9;
+    if (anomalies.length > 0) {
+      confidenceRatio =
+        anomalies.reduce((acc, anomaly) => {
           return acc + (anomaly.confidence ?? 0);
-        }, 0) / anomalies.data.length;
+        }, 0) / anomalies.length;
     }
+
+    const latest = anomalies[0];
 
     return {
       meters: totalMeters,
       totalConsumption: +consumption.toFixed(2),
-      anomalies: anomalies.total,
-      highPriorityAnomalies: anomalies.data.filter(
-        (anomaly) => anomaly.severity === AnomalySeverity.HIGH,
+      anomalies: anomalies.length,
+      highPriorityAnomalies: anomalies.filter(
+        (anomaly) => anomaly.severity === AnomalySeverity.HIGH.toString(),
       ).length,
-      aiConfidence: +aiConfidence.toFixed(2) * 100,
+      aiConfidence: +confidenceRatio.toFixed(2) * 100,
       lastAnalysisAt: latest
         ? new Date(latest.detected_at).toISOString()
         : null,

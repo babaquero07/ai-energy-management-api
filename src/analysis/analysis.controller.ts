@@ -17,42 +17,45 @@ export class AnalysisController {
   constructor(private readonly analysisService: AnalysisService) {}
 
   @Post('analyze')
-  async analyzeMeter(
-    @Body() analyzeMeterDto: AnalyzeMeterDto,
-  ): Promise<{ detected: boolean; anomaly: AnomalyResponseDto | null }> {
-    return this.analysisService.analyzeMeter(analyzeMeterDto.meter_id);
+  async analyzeMeter(@Body() analyzeMeterDto: AnalyzeMeterDto): Promise<{
+    detected: boolean;
+    anomaly: AnomalyResponseDto | null;
+  }> {
+    const result = await this.analysisService.analyzeMeter(
+      analyzeMeterDto.meter_id,
+    );
+
+    return {
+      detected: result.detected,
+      anomaly: result.anomaly ? new AnomalyResponseDto(result.anomaly) : null,
+    };
   }
 
   @Post('analyze/execute')
   async executeAnalysis(): Promise<{ success: boolean }> {
-    return this.analysisService.executeAnalysis();
+    await this.analysisService.executeAnalysis();
+
+    return { success: true };
   }
 
   @Get('analysis/:id')
   async getAnalysis(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<AnomalyDetailResponseDto> {
-    return this.analysisService.getAnalysis(id);
+    const anomaly = await this.analysisService.getAnalysis(id);
+
+    return new AnomalyDetailResponseDto(anomaly);
   }
 
   @Patch('analysis/:id')
   async updateAnalysis(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<{ success: boolean; message: string }> {
-    try {
-      await this.analysisService.updateAnalysis(id);
+    await this.analysisService.updateAnalysis(id);
 
-      return {
-        success: true,
-        message: 'Anomaly analysis updated successfully',
-      };
-    } catch (error) {
-      console.error(error);
-
-      return {
-        success: false,
-        message: 'Failed to update anomaly analysis',
-      };
-    }
+    return {
+      success: true,
+      message: 'Anomaly analysis updated successfully',
+    };
   }
 }

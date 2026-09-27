@@ -8,21 +8,17 @@ import {
 import { AnomalySeverity, AnomalyType } from 'src/anomalies/enums/anomaly.enum';
 import { Event } from 'src/events/entities/event.entity';
 
-export interface AnomalyDetectionResult {
-  detected: boolean;
-  signals: {
-    baselineDeviation: boolean;
-    consumptionSpike: boolean;
-    electricalChange: boolean;
-  };
-  confidence: number;
+export interface AnomalyDetectionResult extends SeriesAnalysis {
+  type: AnomalyType | null;
+  severity: AnomalySeverity | null;
+  relatedEvent: Event | null;
 }
 
 @Injectable()
 export class AnomalyDetectorService {
   constructor(private readonly baselineService: BaselineService) {}
 
-  detect(readings: Reading[], events: Event[] = []) {
+  detect(readings: Reading[], events: Event[] = []): AnomalyDetectionResult {
     const analysis = this.baselineService.analyzeSeries(readings);
     if (!analysis.detected) {
       return { ...analysis, type: null, severity: null, relatedEvent: null };

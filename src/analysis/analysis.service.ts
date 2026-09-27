@@ -1,125 +1,119 @@
 import {
-  forwardRef,
-  Inject,
+  HttpException,
   Injectable,
   InternalServerErrorException,
-  NotFoundException,
+  Logger,
 } from '@nestjs/common';
 import { AnomalyDetectorService } from './anomaly-detector.service';
 import { MetersService } from 'src/meters/meters.service';
 import { AnomaliesService } from 'src/anomalies/anomalies.service';
-import { AnomalyStatus } from 'src/anomalies/enums/anomaly.enum';
-import { AnomalyResponseDto } from 'src/anomalies/dto/anomaly-response.dto';
+import {
+  AnomalySeverity,
+  AnomalyStatus,
+  AnomalyType,
+} from 'src/anomalies/enums/anomaly.enum';
 import { AiService } from './ai/ai.service';
-import { AnomalyDetailResponseDto } from 'src/anomalies/dto/anomaly-detail-response.dto';
+import { Anomaly } from 'src/anomalies/entities/anomaly.entity';
+import { Meter } from 'src/meters/entities/meter.entity';
+
+export interface MeterAnalysisResult {
+  detected: boolean;
+  anomaly: Anomaly | null;
+}
 
 @Injectable()
 export class AnalysisService {
+  private readonly logger = new Logger(AnalysisService.name);
+
   constructor(
     private readonly anomalyDetectorService: AnomalyDetectorService,
-    @Inject(forwardRef(() => MetersService))
     private readonly meterService: MetersService,
     private readonly anomaliesService: AnomaliesService,
     private readonly aiService: AiService,
   ) {}
 
-  // * In this first analysis, I don't use IA analysis because gemini api free tier only allows 20 requests per day.
-  // * So, I'm going to use a simple analysis to get the reason and recommended action.
-  async analyzeMeter(meter_id: string) {
-    const meter = await this.meterService.findOne(meter_id);
+  async analyzeMeter(meterId: string): Promise<MeterAnalysisResult> {
+    const meter = await this.meterService.findOne(meterId);
 
-    const detection = this.anomalyDetectorService.detect(
-      meter.readings,
-      meter.events ?? [],
-    );
-
-    if (!detection.detected) {
-      return {
-        detected: false,
-        anomaly: null,
-      };
-    }
-
-    const analysis_data = {
-      baseline: detection.baseline,
-      variation_percent: detection.variationPercent,
-      signals: detection.signals,
-      segment: detection.segment,
-      max_abs_z: detection.maxAbsZ,
-      worst_power_residual: detection.worstPowerResidual,
-      related_events: detection.relatedEvent,
-    };
-
-    const savedAnomaly = await this.anomaliesService.create({
-      meter,
-      type: detection.type!,
-      severity: detection.severity!,
-      status: AnomalyStatus.DETECTED,
-      confidence: detection.confidence,
-      analysis_data,
-      reason: 'Anomalía detectada. Pendiente de análisis IA.',
-      recommended_action:
-        'Por favor ejecute el análisis IA para obtener más información.',
-    });
-
-    return {
-      detected: true,
-      anomaly: new AnomalyResponseDto(savedAnomaly),
-    };
+    return this.persistDetection(meter);
   }
 
-  async getAnalysis(id: number): Promise<AnomalyDetailResponseDto> {
-    return await this.anomaliesService.findOne(id);
-  }
+  async executeAnalysis(): Promise<void> {
+    const meters = await this.meterService.findAllWithRelations();
 
-  async executeAnalysis(): Promise<{ success: boolean }> {
-    try {
-      const meters = await this.meterService.findAllWithRelations();
-
-      for (const meter of meters) {
-        await this.analyzeMeter(meter.meter_id);
-      }
-
-      return {
-        success: true,
-      };
-    } catch (error) {
-      console.error(error);
-      throw new InternalServerErrorException(
-        'Failed to execute meters analysis',
-      );
+    for (const meter of meters) {
+      await this.persistDetection(meter);
     }
   }
 
-  // * In this second analysis, I use IA analysis to get the reason and recommended action.
-  // * This analysis is executed when the anomaly is detected and the reason and recommended action are not set.
-  async updateAnalysis(id: number) {
-    const anomaly = await this.anomaliesService.findOne(id);
-    if (!anomaly) {
-      throw new NotFoundException('Anomaly not found');
-    }
+  async getAnalysis(id: number): Promise<Anomaly> {
+    return this.anomaliesService.findById(id);
+  }
+
+  async updateAnalysis(id: number): Promise<void> {
+    const anomaly = await this.anomaliesService.findById(id);
 
     try {
-      const ai_result = await this.aiService.analyzeAnomaly({
+      const aiResult = await this.aiService.analyzeAnomaly({
         anomaly_id: anomaly.id,
-        meter_id: anomaly.meter_id,
-        type: anomaly.type,
-        severity: anomaly.severity,
+        meter_id: anomaly.meter.meter_id,
+        type: anomaly.type as AnomalyType,
+        severity: anomaly.severity as AnomalySeverity,
         confidence: anomaly.confidence,
         analysis_data: anomaly.analysis_data,
       });
 
-      anomaly.reason = ai_result.reason;
-      anomaly.recommended_action = ai_result.recommended_action;
+      anomaly.reason = aiResult.reason;
+      anomaly.recommended_action = aiResult.recommended_action;
       anomaly.status = AnomalyStatus.COMPLETED;
 
       await this.anomaliesService.update(anomaly);
     } catch (error) {
-      console.error(error);
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      this.logger.error(
+        `AI analysis failed for anomaly ${id}`,
+        error instanceof Error ? error.stack : undefined,
+      );
 
       throw new InternalServerErrorException(
         'Failed to update anomaly analysis with IA',
       );
     }
+  }
+
+  private async persistDetection(meter: Meter): Promise<MeterAnalysisResult> {
+    const detection = this.anomalyDetectorService.detect(
+      meter.readings,
+      meter.events ?? [],
+    );
+
+    if (!detection.detected || !detection.type || !detection.severity) {
+      return { detected: false, anomaly: null };
+    }
+
+    const anomaly = await this.anomaliesService.create({
+      meter,
+      type: detection.type,
+      severity: detection.severity,
+      status: AnomalyStatus.DETECTED,
+      confidence: detection.confidence,
+      analysis_data: {
+        baseline: detection.baseline,
+        variation_percent: detection.variationPercent,
+        signals: detection.signals,
+        segment: detection.segment,
+        max_abs_z: detection.maxAbsZ,
+        worst_power_residual: detection.worstPowerResidual,
+        related_events: detection.relatedEvent,
+      },
+      reason: 'Anomalía detectada. Pendiente de análisis IA.',
+      recommended_action:
+        'Por favor ejecute el análisis IA para obtener más información.',
+    });
+
+    return { detected: true, anomaly };
   }
 }

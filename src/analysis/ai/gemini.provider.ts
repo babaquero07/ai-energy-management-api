@@ -7,7 +7,7 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class GeminiProvider extends AIProvider {
-  private readonly ai: GoogleGenAI;
+  private ai: GoogleGenAI | null = null;
   private readonly model: string = 'gemini-3.7-flash';
 
   private buildPrompt(input: AnomalyAnalysisInput): string {
@@ -60,21 +60,29 @@ export class GeminiProvider extends AIProvider {
 
   constructor(private readonly configService: ConfigService) {
     super();
+  }
 
-    const apiKey = this.configService.get('GEMINI_API_KEY') as string;
+  private getClient(): GoogleGenAI {
+    if (this.ai) {
+      return this.ai;
+    }
+
+    const apiKey = this.configService.get<string>('GEMINI_API_KEY');
+
     if (!apiKey) {
       throw new Error('GEMINI_API_KEY is not set');
     }
 
-    this.ai = new GoogleGenAI({
-      apiKey: apiKey,
-    });
+    this.ai = new GoogleGenAI({ apiKey });
+
+    return this.ai;
   }
 
   async analyzeAnomaly(input: AnomalyAnalysisInput): Promise<AIAnalysisResult> {
     const prompt = this.buildPrompt(input);
+    const client = this.getClient();
 
-    const response = await this.ai.models.generateContent({
+    const response = await client.models.generateContent({
       model: this.model,
       contents: prompt,
       config: {

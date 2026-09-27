@@ -9,14 +9,18 @@ export class AnomaliesController {
 
   @Get()
   async findAll(): Promise<AnomaliesResponseDto> {
-    return this.anomaliesService.findAll();
+    const anomalies = await this.anomaliesService.findAll();
+
+    return new AnomaliesResponseDto(anomalies);
   }
 
   @Get(':id')
   async findOne(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<AnomalyDetailResponseDto> {
-    return this.anomaliesService.findOne(id);
+    const anomaly = await this.anomaliesService.findById(id);
+
+    return new AnomalyDetailResponseDto(anomaly);
   }
 
   @Delete(':id')
