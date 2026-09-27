@@ -22,6 +22,11 @@ export class DashboardService {
 
     const latest = anomalies.data[0];
 
+    const aiConfidence =
+      anomalies.data.reduce((acc, anomaly) => {
+        return acc + (anomaly.confidence ?? 0);
+      }, 0) / anomalies.data.length;
+
     return {
       meters: totalMeters,
       totalConsumption: +consumption.toFixed(2),
@@ -29,7 +34,7 @@ export class DashboardService {
       highPriorityAnomalies: anomalies.data.filter(
         (anomaly) => anomaly.severity === AnomalySeverity.HIGH,
       ).length,
-      aiConfidence: latest?.confidence ?? null,
+      aiConfidence: +aiConfidence.toFixed(2) * 100,
       lastAnalysisAt: latest
         ? new Date(latest.detected_at).toISOString()
         : null,
