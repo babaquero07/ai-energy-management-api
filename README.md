@@ -2,7 +2,7 @@
 
 API REST para gestionar medidores eléctricos, lecturas de consumo, eventos operativos y detección de anomalías. El análisis combina un motor determinista (línea base, outliers y calidad de dato) con una explicación generada por Gemini.
 
-Prefijo global: `/api`. El servidor escucha en `127.0.0.1` (puerto `3000` si `PORT` no está definido). CORS permite el origen `http://localhost:3001`.
+Prefijo global: `/api`. El proceso escucha en `0.0.0.0` y el puerto es `PORT` (`3000` si no está definido). La URL que se imprime al arrancar sale de `API_URL`. CORS permite el origen `http://localhost:3001`.
 
 ## Tecnologías
 
@@ -76,27 +76,44 @@ Enums de anomalía:
 
 ## Variables de entorno
 
-Crea un archivo `.env` en la raíz (está en `.gitignore`). Docker Compose y la API leen las mismas variables de Postgres.
+Crea un archivo `.env` en la raíz (está en `.gitignore`). La configuración activa apunta a la base y a la API desplegadas. El bloque comentado es el de desarrollo local.
 
 ```env
 PORT=3000
-DB_HOST=localhost
-POSTGRES_USER=energy
-POSTGRES_PASSWORD=energy
-POSTGRES_DB=energy_management
+
+# Database
+DATABASE_URL=postgresql://user:password@host:5432/database
+
+# API_URL
+API_URL=https://ai-energy-management-api.onrender.com
+
+# Gemini API Key
 GEMINI_API_KEY=
-DATABASE_URL=
+
+# Development
+
+# Docker database
+# DB_HOST=localhost
+# POSTGRES_USER=
+# POSTGRES_PASSWORD=
+# POSTGRES_DB=ai-energy-management-db
+
+# Local API_URL
+# API_URL=http://localhost:3000
 ```
 
-| Variable            | Uso                                                                                                         |
-| ------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `PORT`              | Puerto HTTP. Por defecto `3000`.                                                                            |
-| `DB_HOST`           | Host de Postgres visto por la API. En local, `localhost`. El puerto de la conexión está fijo en `5432`.     |
-| `POSTGRES_USER`     | Usuario de Postgres (Compose y TypeORM).                                                                    |
-| `POSTGRES_PASSWORD` | Contraseña de Postgres.                                                                                     |
-| `POSTGRES_DB`       | Nombre de la base.                                                                                          |
-| `GEMINI_API_KEY`    | Clave de Google AI. Solo hace falta para `PATCH /api/ai/analysis/:id`. El resto de la API arranca sin ella. |
-| `DATABASE_URL`      | En caso de tener la DB en algun cloud service                                                               |
+| Variable | Uso |
+| --- | --- |
+| `PORT` | Puerto HTTP del proceso. Por defecto `3000`. |
+| `DATABASE_URL` | Cadena de conexión que usa TypeORM (`postgresql://usuario:contraseña@host:5432/base`). En el despliegue apunta a Postgres en Render. La conexión lleva SSL con `rejectUnauthorized: false`, que Render exige. |
+| `API_URL` | URL pública que se escribe en el log al arrancar (`${API_URL}/api`). En producción es `https://ai-energy-management-api.onrender.com`. En local, `http://localhost:3000`. Si no está definida, el valor por defecto es `http://localhost:3000`. |
+| `GEMINI_API_KEY` | Clave de Google AI. Solo hace falta para `PATCH /api/ai/analysis/:id`. El resto de la API arranca sin ella. |
+| `DB_HOST` | Host de Postgres para desarrollo. Comentada en el `.env` y en `AppModule`. Con Docker, `localhost`. |
+| `POSTGRES_USER` | Usuario de la base local. La usa Docker Compose y, si se descomenta, TypeORM. |
+| `POSTGRES_PASSWORD` | Contraseña de la base local. La usa Docker Compose y, si se descomenta, TypeORM. |
+| `POSTGRES_DB` | Nombre de la base local (`ai-energy-management-db`). |
+
+Para usar la base de Docker hay que comentar `DATABASE_URL` en el `.env`, descomentar `DB_HOST`, `POSTGRES_USER`, `POSTGRES_PASSWORD` y `POSTGRES_DB`, y en `src/app.module.ts` cambiar la conexión de `url` a `host`, `username`, `password` y `database`.
 
 ## Despliegue local
 

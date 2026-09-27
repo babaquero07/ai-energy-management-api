@@ -4,6 +4,7 @@ import { AppModule } from './app.module';
 import { Logger, ValidationPipe } from '@nestjs/common';
 
 const PORT = process.env.PORT ?? 3000;
+const API_URL = process.env.API_URL ?? 'http://localhost:3000';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -26,9 +27,9 @@ async function bootstrap() {
     credentials: true,
   });
 
-  await app.listen(PORT, '127.0.0.1');
+  await app.listen(PORT, '0.0.0.0');
 
-  Logger.log(`API escuchando en http://localhost:${PORT}/api`, 'Bootstrap');
+  Logger.log(`API escuchando en ${API_URL}/api`, 'Bootstrap');
 }
 
 void bootstrap();
