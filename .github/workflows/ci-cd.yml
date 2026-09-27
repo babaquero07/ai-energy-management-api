@@ -9,35 +9,35 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [22.x]
-
     steps:
       - name: Checkout código
         uses: actions/checkout@v4
 
+      - name: Instalar pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: "npm"
+          node-version: "22.x"
+          cache: "pnpm"
 
       - name: Instalar dependencias
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Lint
-        run: npm run lint
+        run: pnpm run lint
 
       - name: Formatear código
-        run: npm run format
+        run: pnpm run format
 
-      - name: Ejecutar tests unitarios
-        run: npm run test
+      - name: Tests unitarios
+        run: pnpm run test
 
-      - name: Ejecutar tests e2e
-        run: npm run test:e2e
+      - name: Tests e2e
+        run: pnpm run test:e2e
 
       - name: Build
-        run: npm run build
+        run: pnpm run build
