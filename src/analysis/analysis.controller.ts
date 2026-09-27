@@ -39,11 +39,20 @@ export class AnalysisController {
   async updateAnalysis(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<{ success: boolean; message: string }> {
-    await this.analysisService.updateAnalysis(id);
+    try {
+      await this.analysisService.updateAnalysis(id);
 
-    return {
-      success: true,
-      message: 'Anomaly analysis updated successfully',
-    };
+      return {
+        success: true,
+        message: 'Anomaly analysis updated successfully',
+      };
+    } catch (error) {
+      console.error(error);
+
+      return {
+        success: false,
+        message: 'Failed to update anomaly analysis',
+      };
+    }
   }
 }

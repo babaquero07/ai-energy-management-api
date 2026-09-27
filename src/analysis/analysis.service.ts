@@ -23,6 +23,8 @@ export class AnalysisService {
     private readonly aiService: AiService,
   ) {}
 
+  // * In this first analysis, I don't use IA analysis because gemini api free tier only allows 20 requests per day.
+  // * So, I'm going to use a simple analysis to get the reason and recommended action.
   async analyzeMeter(meter_id: string) {
     const meter = await this.meterService.findOne(meter_id);
 
@@ -55,28 +57,10 @@ export class AnalysisService {
       status: AnomalyStatus.DETECTED,
       confidence: detection.confidence,
       analysis_data,
-      reason: 'Anomaly detected. Pending AI analysis.',
-      recommended_action: 'Pending AI analysis.',
+      reason: 'Anomalía detectada. Pendiente de análisis IA.',
+      recommended_action:
+        'Por favor ejecute el análisis IA para obtener más información.',
     });
-
-    try {
-      const ai_result = await this.aiService.analyzeAnomaly({
-        anomaly_id: savedAnomaly.id,
-        meter_id: meter.meter_id,
-        type: detection.type!,
-        severity: detection.severity!,
-        confidence: detection.confidence,
-        analysis_data,
-      });
-
-      savedAnomaly.reason = ai_result.reason;
-      savedAnomaly.recommended_action = ai_result.recommended_action;
-      savedAnomaly.status = AnomalyStatus.COMPLETED;
-
-      await this.anomaliesService.update(savedAnomaly);
-    } catch (error) {
-      console.error(error);
-    }
 
     return {
       detected: true,
@@ -107,6 +91,8 @@ export class AnalysisService {
     }
   }
 
+  // * In this second analysis, I use IA analysis to get the reason and recommended action.
+  // * This analysis is executed when the anomaly is detected and the reason and recommended action are not set.
   async updateAnalysis(id: number) {
     const anomaly = await this.anomaliesService.findOne(id);
     if (!anomaly) {
