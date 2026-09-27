@@ -8,7 +8,7 @@ import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class GeminiProvider extends AIProvider {
   private ai: GoogleGenAI | null = null;
-  private readonly model: string = 'gemini-3.7-flash';
+  private readonly model: string = 'gemini-3.6-flash';
 
   private buildPrompt(input: AnomalyAnalysisInput): string {
     return `
