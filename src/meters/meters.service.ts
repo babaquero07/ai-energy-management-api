@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { MetersResponseDto } from './dto/meters-response.dto';
-import { Between, FindOptionsWhere, Repository } from 'typeorm';
+import { FindOptionsWhere, Raw, Repository } from 'typeorm';
 import { FindMetersQueryDto } from './dto/find-meters-query.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Meter } from './entities/meter.entity';
@@ -78,9 +78,9 @@ export class MetersService {
     }
 
     if (query.date) {
-      where.created_at = Between(
-        new Date(`${query.date}T00:00:00.000Z`),
-        new Date(`${query.date}T23:59:59.999Z`),
+      where.created_at = Raw(
+        (alias) => `CAST(${alias} AS DATE) = CAST(:createdOn AS DATE)`,
+        { createdOn: query.date },
       );
     }
 
