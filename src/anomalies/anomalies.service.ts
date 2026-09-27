@@ -47,4 +47,14 @@ export class AnomaliesService {
 
     return new AnomalyDetailResponseDto(anomaly);
   }
+
+  async delete(id: number) {
+    const anomaly = await this.anomalyRepository.findOne({
+      where: { id },
+    });
+
+    if (!anomaly) throw new NotFoundException(`Anomaly ${id} not found`);
+
+    await this.anomalyRepository.delete(id);
+  }
 }
