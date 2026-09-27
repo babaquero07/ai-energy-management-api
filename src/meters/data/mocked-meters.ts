@@ -1,0 +1,76 @@
+export const mocket_meters = [
+  {
+    meter_id: 'M-111',
+    name: 'Medidor Respaldo',
+    location: 'Sótano',
+    status: 'Activo',
+  },
+  {
+    meter_id: 'M-105',
+    name: 'Medidor Servidores',
+    location: 'Piso 1',
+    status: 'Activo',
+  },
+  {
+    meter_id: 'M-107',
+    name: 'Medidor Iluminación',
+    location: 'Piso 2',
+    status: 'Inactivo',
+  },
+  {
+    meter_id: 'M-108',
+    name: 'Medidor Climatización',
+    location: 'Piso 2',
+    status: 'Activo',
+    created_at: '2026-07-25T03:59:27.956Z',
+  },
+  {
+    meter_id: 'M-110',
+    name: 'Medidor Bombas',
+    location: 'Sótano',
+    status: 'Mantenimiento',
+  },
+  {
+    meter_id: 'M-101',
+    name: 'Medidor Zona A',
+    location: 'Planta Baja',
+    status: 'Activo',
+  },
+  {
+    meter_id: 'M-102',
+    name: 'Medidor Zona B',
+    location: 'Planta Baja',
+    status: 'Activo',
+  },
+  {
+    id: 7,
+    meter_id: 'M-103',
+    name: 'Medidor Zona C',
+    location: 'Piso 1',
+    status: 'Activo',
+  },
+  {
+    meter_id: 'M-106',
+    name: 'Medidor Secundario',
+    location: 'Piso 1',
+    status: 'Activo',
+  },
+  {
+    meter_id: 'M-109',
+    name: 'Medidor HVAC',
+    location: 'Piso 2',
+    status: 'Inactivo',
+  },
+  {
+    meter_id: 'M-112',
+    name: 'Medidor Exterior',
+    location: 'Azotea',
+    status: 'Mantenimiento',
+  },
+  {
+    meter_id: 'M-104',
+    name: 'Medidor Principal',
+    location: 'Planta Baja',
+    status: 'Activo',
+  },
+];

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { MetersResponseDto } from './dto/meters-response.dto';
 import { FindOptionsWhere, Raw, Repository } from 'typeorm';
 import { FindMetersQueryDto } from './dto/find-meters-query.dto';
@@ -8,6 +12,7 @@ import { MeterDetailResponseDto } from './dto/meter-detail-response.dto';
 import { BaselineService } from 'src/analysis/baseline.service';
 import { ReadingsResponseDto } from 'src/readings/dto/readings-reponse.dto';
 import { MeterResponseDto } from './dto/meter-response.dto';
+import { mocket_meters } from './data/mocked-meters';
 
 @Injectable()
 export class MetersService {
@@ -16,6 +21,15 @@ export class MetersService {
     private meterRepository: Repository<Meter>,
     private readonly baselineService: BaselineService,
   ) {}
+
+  async seedMeters() {
+    try {
+      await this.meterRepository.save(mocket_meters);
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException('Error seeding meters');
+    }
+  }
 
   async getMetersGeneralInfo() {
     const result:
