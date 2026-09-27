@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { MetersService } from './meters.service';
 import { MetersResponseDto } from './dto/meters-response.dto';
 import { MeterDetailResponseDto } from './dto/meter-detail-response.dto';
@@ -32,12 +32,13 @@ export class MetersController {
     return this.metersService.getMeterReadings(id);
   }
 
-  @Post('seed')
-  async seedMeters() {
-    await this.metersService.seedMeters();
+  /** Only for development purposes. Uncomment to seed meters. if your db is empty. */
+  // @Post('seed')
+  // async seedMeters() {
+  //   await this.metersService.seedMeters();
 
-    return {
-      message: 'Meters seeded successfully',
-    };
-  }
+  //   return {
+  //     message: 'Meters seeded successfully',
+  //   };
+  // }
 }

@@ -2,8 +2,6 @@
 
 API REST para gestionar medidores eléctricos, lecturas de consumo, eventos operativos y detección de anomalías. El análisis combina un motor determinista (línea base, outliers y calidad de dato) con una explicación generada por Gemini.
 
-Prefijo global: `/api`. El proceso escucha en `0.0.0.0` y el puerto es `PORT` (`3000` si no está definido). La URL que se imprime al arrancar sale de `API_URL`. CORS permite el origen `http://localhost:3001`.
-
 ## Tecnologías
 
 | Capa                        | Tecnología                                                                                                |
@@ -102,16 +100,16 @@ GEMINI_API_KEY=
 # API_URL=http://localhost:3000
 ```
 
-| Variable | Uso |
-| --- | --- |
-| `PORT` | Puerto HTTP del proceso. Por defecto `3000`. |
-| `DATABASE_URL` | Cadena de conexión que usa TypeORM (`postgresql://usuario:contraseña@host:5432/base`). En el despliegue apunta a Postgres en Render. La conexión lleva SSL con `rejectUnauthorized: false`, que Render exige. |
-| `API_URL` | URL pública que se escribe en el log al arrancar (`${API_URL}/api`). En producción es `https://ai-energy-management-api.onrender.com`. En local, `http://localhost:3000`. Si no está definida, el valor por defecto es `http://localhost:3000`. |
-| `GEMINI_API_KEY` | Clave de Google AI. Solo hace falta para `PATCH /api/ai/analysis/:id`. El resto de la API arranca sin ella. |
-| `DB_HOST` | Host de Postgres para desarrollo. Comentada en el `.env` y en `AppModule`. Con Docker, `localhost`. |
-| `POSTGRES_USER` | Usuario de la base local. La usa Docker Compose y, si se descomenta, TypeORM. |
-| `POSTGRES_PASSWORD` | Contraseña de la base local. La usa Docker Compose y, si se descomenta, TypeORM. |
-| `POSTGRES_DB` | Nombre de la base local (`ai-energy-management-db`). |
+| Variable            | Uso                                                                                                                                                                                                                                             |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PORT`              | Puerto HTTP del proceso. Por defecto `3000`.                                                                                                                                                                                                    |
+| `DATABASE_URL`      | Cadena de conexión que usa TypeORM (`postgresql://usuario:contraseña@host:5432/base`). En el despliegue apunta a Postgres en Render. La conexión lleva SSL con `rejectUnauthorized: false`, que Render exige.                                   |
+| `API_URL`           | URL pública que se escribe en el log al arrancar (`${API_URL}/api`). En producción es `https://ai-energy-management-api.onrender.com`. En local, `http://localhost:3000`. Si no está definida, el valor por defecto es `http://localhost:3000`. |
+| `GEMINI_API_KEY`    | Clave de Google AI. Solo hace falta para `PATCH /api/ai/analysis/:id`. El resto de la API arranca sin ella.                                                                                                                                     |
+| `DB_HOST`           | Host de Postgres para desarrollo. Comentada en el `.env` y en `AppModule`. Con Docker, `localhost`.                                                                                                                                             |
+| `POSTGRES_USER`     | Usuario de la base local. La usa Docker Compose y, si se descomenta, TypeORM.                                                                                                                                                                   |
+| `POSTGRES_PASSWORD` | Contraseña de la base local. La usa Docker Compose y, si se descomenta, TypeORM.                                                                                                                                                                |
+| `POSTGRES_DB`       | Nombre de la base local (`ai-energy-management-db`).                                                                                                                                                                                            |
 
 Para usar la base de Docker hay que comentar `DATABASE_URL` en el `.env`, descomentar `DB_HOST`, `POSTGRES_USER`, `POSTGRES_PASSWORD` y `POSTGRES_DB`, y en `src/app.module.ts` cambiar la conexión de `url` a `host`, `username`, `password` y `database`.
 
@@ -143,7 +141,9 @@ pnpm run test:cov
 
 Para apagar la base: `docker compose down`. El volumen se conserva. `docker compose down -v` borra los datos.
 
-## Seed
+## Seed (solo para desarrollo local y base de datos local)
+
+⚠️ **Atención:** Estos endpoints de seed son exclusivamente para desarrollo local y bases de datos locales. **En producción, estos endpoints están comentados en el código y no están disponibles.**
 
 La base arranca vacía. TypeORM crea las tablas, pero los medidores, eventos y lecturas se cargan con tres endpoints. Hay que llamarlos **en este orden**: eventos y lecturas referencian `meter_id`, así que los medidores tienen que existir antes.
 
